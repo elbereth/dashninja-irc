@@ -6,7 +6,7 @@ package require json
 
 ::http::register https 443 [list ::tls::socket -tls1 1]
 
-set dashircbot_worth_subversion "2.12"
+set dashircbot_worth_subversion "2.13"
 set dashircbot_worth_script [file tail [ dict get [ info frame [ info frame ] ] file ]]
 
 set dashircbot_translation [dict create \
@@ -53,8 +53,8 @@ set dashircbot_translation [dict create \
         "en" "%s masternodes = %.3f DASH/Day (source:%s|%s) using %s%% blocks paid at %s%% last 24h (source:%s|%s) @ %s DASH/BTC (source:%s|%s) = %.9f BTC/Day / %.2f %s/Day (source:%s|%s)" \
         "fr" "%s masternodes = %.3f DASH/Jour (source:%s|%s) avec %s%% des blocs payés à %s%% ces dernières 24h (source:%s|%s) @ %s DASH/BTC (source:%s|%s) = %.9f BTC/Jour / %.2f %s/Jour (source:%s|%s)"] \
                                     "result_worth" [dict create \
-        "en" "%s DASH @ %s DASH/BTC (source:%s|%s) = %.6f BTC / %.2f %s (source:%s:%s)" \
-        "fr" "%s DASH @ %s DASH/BTC (source:%s|%s) = %.6f BTC / %.2f %s (source:%s:%s)"] \
+        "en" "%s DASH @ %s DASH/BTC (source:%s|%s) = %.6f BTC / %.2f %s (source:%s|%s)" \
+        "fr" "%s DASH @ %s DASH/BTC (source:%s|%s) = %.6f BTC / %.2f %s (source:%s|%s)"] \
  ]
 
 set dashircbot_tablevar_refreshinterval 30
