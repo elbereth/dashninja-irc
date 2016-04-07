@@ -6,7 +6,7 @@ package require json
 
 ::http::register https 443 [list ::tls::socket -tls1 1]
 
-set dashircbot_worth_subversion "2.13"
+set dashircbot_worth_subversion "2.14"
 set dashircbot_worth_script [file tail [ dict get [ info frame [ info frame ] ] file ]]
 
 set dashircbot_translation [dict create \
@@ -119,7 +119,7 @@ proc dashircbot_refresh_tablevar {} {
   set now [clock seconds]
   if {$now > [expr $::dashircbot_tablevarlast+$::dashircbot_tablevar_refreshinterval]} {
     putlog "dashircbot v$::dashircbot_version ($::dashircbot_worth_script v$::dashircbot_worth_subversion) \[I\] [lindex [info level 0] 0] refreshing tablevar (last from [clock format $::dashircbot_tablevarlast -format {%Y-%m-%d %H:%M:%S} -gmt true])"
-    if { [catch {set httptoken [http::geturl "http://explorer.dashninja.pl/chain/Dash/q/getdifficulty" -timeout 2000]} errmsg] } {
+    if { [catch {set httptoken [http::geturl "https://explorer.dashninja.pl/chain/Dash/q/getdifficulty" -timeout 2000]} errmsg] } {
       http::cleanup $httptoken
       putlog "dashircbot v$::dashircbot_version ($::dashircbot_worth_script v$::dashircbot_worth_subversion) \[E\] [lindex [info level 0] 0] $errmsg"
     } elseif { [http::status $httptoken] != "ok" } {
