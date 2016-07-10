@@ -9,6 +9,7 @@ It contains:
 
 ## Requirement:
 * Eggdrop bot (v1.8)
+* tcl 8.6 with mysqltcl 3.052 and tcl-tls 1.6
 * A Dash Ninja Front-End public API (dashninja-fe).
 * A Dash Ninja Database on same machine on localhost (dashninja-db).
 
