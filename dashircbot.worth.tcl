@@ -6,7 +6,7 @@ package require json
 
 ::http::register https 443 [list ::tls::socket -tls1 1]
 
-set dashircbot_worth_subversion "2.14"
+set dashircbot_worth_subversion "2.15"
 set dashircbot_worth_script [file tail [ dict get [ info frame [ info frame ] ] file ]]
 
 set dashircbot_translation [dict create \
@@ -394,7 +394,7 @@ proc do_worth {action fiat nick chan param} {
           puthelp "$header [dict get [dict get $::dashircbot_translation "usage_worth"] $lang]"
           return
         }
-        if { [catch {set wsresult [http::data [http::geturl "http://explorer.dashninja.pl/chain/Dash/q/addressbalance/$param" -timeout 2000]]} errmsg] } {
+        if { [catch {set wsresult [http::data [http::geturl "https://explorer.dashninja.pl/chain/Dash/q/addressbalance/$param" -timeout 2000]]} errmsg] } {
           putlog "dashircbot v$::dashircbot_version ($::dashircbot_worth_script v$::dashircbot_worth_subversion) \[E\] [lindex [info level 0] 0] webservice error: $errmsg"
           puthelp "$header [dict get [dict get $::dashircbot_translation "usage_worth"] $lang]"
           return
