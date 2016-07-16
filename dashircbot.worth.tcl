@@ -6,22 +6,22 @@ package require json
 
 ::http::register https 443 [list ::tls::socket -tls1 1]
 
-set dashircbot_worth_subversion "2.15"
+set dashircbot_worth_subversion "2.16"
 set dashircbot_worth_script [file tail [ dict get [ info frame [ info frame ] ] file ]]
 
 set dashircbot_translation [dict create \
                                     "usage_calc" [dict create \
         "en" "Usage: !calc\[fiat\] <hashrate_in_khs> - \[fiat\] can be eur or usd (default: usd) - Ex: !calc 10000" \
-        "fr" "Utilisation: !calc\[fiat\] <hachage_en_khs> - \[fiat\] peux être eur ou usd (par défaut: usd) - Ex: !calc 10000\]"] \
+        "fr" "Utilisation: !calc\[fiat\] <hachage_en_khs> - \[fiat\] peux Ãªtre eur ou usd (par dÃ©faut: usd) - Ex: !calc 10000\]"] \
                                     "usage_diff" [dict create \
-        "en" "Usage: !diff \[actual_difficulty_value\] - If no difficulty is given as parameter, will use current one." \
-        "fr" "Utilisation: !diff \[valeur_difficulté_actuelle\] - Si la difficulté n'est pas spécifié, utilisera l'actuelle."] \
+        "en" "Usage: !diff \[difficulty_value\] - If no difficulty is given as parameter, will use current one." \
+        "fr" "Utilisation: !diff \[valeur_difficultÃ©\] - Si la difficultÃ© n'est pas spÃ©cifiÃ©, utilisera l'actuelle."] \
                                     "usage_mnworth" [dict create \
         "en" "Usage: !mnworth\[fiat\] <number_of_masternodes> - \[fiat\] can be eur or usd (default: usd) - Ex: !mnworth 2 or !mnw" \
-        "fr" "Utilisation: !mnvaleur\[fiat\] <nombre_de_masternodes> - \[fiat\] peux être eur ou usd (par défaut: usd) - Ex: !mnvaleur 2 ou !mnv"] \
+        "fr" "Utilisation: !mnvaleur\[fiat\] <nombre_de_masternodes> - \[fiat\] peux Ãªtre eur ou usd (par dÃ©faut: usd) - Ex: !mnvaleur 2 ou !mnv"] \
                                     "usage_worth" [dict create \
         "en" "Usage: !worth\[fiat\] <amount_DASH|Dash_Address> - \[fiat\] can be eur or usd (default: usd) - Ex: !worth 1234.5 or !worth Xr57hNKbEzNHFkTsUmfhPxKRfnnt9nVe7z or !w 76" \
-        "fr" "Utilisation: !valeur\[fiat\] <montant_DASH|Addresse_Dash> - \[fiat\] peux être eur ou usd (par défaut: usd) - Ex: !valeur 1234.5 ou !valeur Xr57hNKbEzNHFkTsUmfhPxKRfnnt9nVe7z ou !v 76"] \
+        "fr" "Utilisation: !valeur\[fiat\] <montant_DASH|Addresse_Dash> - \[fiat\] peux Ãªtre eur ou usd (par dÃ©faut: usd) - Ex: !valeur 1234.5 ou !valeur Xr57hNKbEzNHFkTsUmfhPxKRfnnt9nVe7z ou !v 76"] \
                                     "action_unavailable" [dict create \
         "en" "Command is temporarily unavailable." \
         "fr" "Commande temporairement indisponible."] \
@@ -30,13 +30,13 @@ set dashircbot_translation [dict create \
         "fr" "Commande %s inconnue."] \
                                     "result_calc" [dict create \
         "en" "With last 24h supply of %s DASH (source:%s|%s) and a network hashrate of %s (source:%s|%s) your %s would have generated %.9f DASH @ %s DASH/BTC (source:%s|%s) = %.9f BTC/Day / %.2f %s/Day (source:%s|%s)" \
-        "fr" "Avec %s générés ces dernières 24h (source:%s|%s) et un hachage réseau de %s (source:%s|%s) vos %s aurais généré %.9f DASH @ %s DASH/BTC (source:%s|%s) = %.9f BTC/Day / %.2f %s/Day (source:%s|%s)"] \
+        "fr" "Avec %s gÃ©nÃ©rÃ©s ces derniÃ©res 24h (source:%s|%s) et un hachage rÃ©seau de %s (source:%s|%s) vos %s aurais gÃ©nÃ©rÃ© %.9f DASH @ %s DASH/BTC (source:%s|%s) = %.9f BTC/Day / %.2f %s/Day (source:%s|%s)"] \
                                     "result_diff" [dict create \
         "en" "%s difficulty: %s%s Coin generation: %.2f DASH miner + %.2f DASH masternode (%s%%) = %.2f DASH total" \
-        "fr" "Difficulté %s: %s%s Génération de pièces: %.2f DASH mineur + %.2f DASH masternode (%s%%) = %.2f DASH au total"] \
+        "fr" "DifficultÃ© %s: %s%s GÃ©nÃ©ration de piÃ©ces: %.2f DASH mineur + %.2f DASH masternode (%s%%) = %.2f DASH au total"] \
                                     "result_diff_asked" [dict create \
         "en" "Asked" \
-        "fr" "demandée"] \
+        "fr" "demandÃ©e"] \
                                     "result_diff_current" [dict create \
         "en" "Current" \
         "fr" "actuelle"] \
@@ -47,11 +47,11 @@ set dashircbot_translation [dict create \
         "en" "Dash position = %d with %s BTC market cap (%s %s with supply of %s DASH) and a 24h volume of %s BTC (%s %s) %s%% (source:%s|%s)" \
         "fr" "Position Dash = %d avec une capitalisation marche de %s BTC (%s %s avec un total de %s DASH) et un volume journalier de %s BTC (%s %s) %s%% (source:%s|%s)"] \
                                     "result_mnstats" [dict create \
-        "en" "%d active masternodes (source:%s|%s) @ %s DASH/BTC (source:%s|%s) = %.2f BTC / %.2f %s in stake (source:%s|%s)" \
-        "fr" "%d active masternodes (source:%s|%s) @ %s DASH/BTC (source:%s|%s) = %.2f BTC / %.2f %s en épargne (source:%s|%s)"] \
+        "en" "%d active masternodes (source:%s|%s) ATH = %d (%s UTC) @ %s DASH/BTC (source:%s|%s) = %.2f BTC / %.2f %s in stake (source:%s|%s)" \
+        "fr" "%d active masternodes (source:%s|%s) ATH = %d (%s UTC) @ %s DASH/BTC (source:%s|%s) = %.2f BTC / %.2f %s en Ã©pargne (source:%s|%s)"] \
                                     "result_mnworth" [dict create \
         "en" "%s masternodes = %.3f DASH/Day (source:%s|%s) using %s%% blocks paid at %s%% last 24h (source:%s|%s) @ %s DASH/BTC (source:%s|%s) = %.9f BTC/Day / %.2f %s/Day (source:%s|%s)" \
-        "fr" "%s masternodes = %.3f DASH/Jour (source:%s|%s) avec %s%% des blocs payés à %s%% ces dernières 24h (source:%s|%s) @ %s DASH/BTC (source:%s|%s) = %.9f BTC/Jour / %.2f %s/Jour (source:%s|%s)"] \
+        "fr" "%s masternodes = %.3f DASH/Jour (source:%s|%s) avec %s%% des blocs payÃ©s Ã  %s%% ces derniÃ¨res 24h (source:%s|%s) @ %s DASH/BTC (source:%s|%s) = %.9f BTC/Jour / %.2f %s/Jour (source:%s|%s)"] \
                                     "result_worth" [dict create \
         "en" "%s DASH @ %s DASH/BTC (source:%s|%s) = %.6f BTC / %.2f %s (source:%s|%s)" \
         "fr" "%s DASH @ %s DASH/BTC (source:%s|%s) = %.6f BTC / %.2f %s (source:%s|%s)"] \
@@ -203,6 +203,11 @@ proc do_worth {action fiat nick chan param} {
       dashircbot_unavailable $header $lang
       return
     }
+    set mnactiveathcount [dashircbot_tablevar_fetch "mnactiveath"]
+    if { [lindex $mnactiveathcount 0] == false } {
+      dashircbot_unavailable $header $lang
+      return
+    }
     set last24hsupply [dashircbot_tablevar_fetch "last24hsupply"]
     if { [lindex $last24hsupply 0] == false } {
       dashircbot_unavailable $header $lang
@@ -281,11 +286,7 @@ proc do_worth {action fiat nick chan param} {
       dashircbot_unavailable $header $lang
       return
     }
-#    if {[lindex $mnactivecount 0] > 0} {
-#      set drkpermn [expr ([lindex $last24hsupply 0]/[lindex $mnactivecount 0])*[lindex $mnpaymentratio 0]]
-#    } else {
-      set drkpermn [expr ([lindex $paymentdrk 0]/[lindex $mnactivecount 0])]
-#    }
+    set drkpermn [expr ([lindex $paymentdrk 0]/[lindex $mnactivecount 0])]
     if {$action == "calc"} {
       if {$param == ""} {
         puthelp "$header [dict get [dict get $::dashircbot_translation "usage_calc"] $lang]"
@@ -354,7 +355,7 @@ proc do_worth {action fiat nick chan param} {
         set fiatsource [lindex $usdbtc 2]
         set fiatdate [dashircbot_getdeltatime [lindex $usdbtc 1] [clock seconds]]
       }
-      set outmsg [format [dict get [dict get $::dashircbot_translation "result_mnstats"] $lang] [lindex $mnactivecount 0] [lindex $mnactivecount 2] [dashircbot_getdeltatime [lindex $mnactivecount 1] [clock seconds]] [lindex $btcdrk 0] [lindex $btcdrk 2] [dashircbot_getdeltatime [lindex $btcdrk 1] [clock seconds]] $lockedbtc $lockedfiat $fiat $fiatsource $fiatdate]
+      set outmsg [format [dict get [dict get $::dashircbot_translation "result_mnstats"] $lang] [lindex $mnactivecount 0] [lindex $mnactivecount 2] [dashircbot_getdeltatime [lindex $mnactivecount 1] [clock seconds]] [lindex $mnactiveathcount 0] [clock format [lindex $mnactiveathcount 1] -format "%d/%m/%Y %H:%M" -gmt 1] [lindex $btcdrk 0] [lindex $btcdrk 2] [dashircbot_getdeltatime [lindex $btcdrk 1] [clock seconds]] $lockedbtc $lockedfiat $fiat $fiatsource $fiatdate]
     } elseif {$action == "mnworth"} {
       if {$param == ""} {
         set $param "1"
