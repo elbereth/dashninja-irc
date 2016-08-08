@@ -6,7 +6,7 @@ package require json
 
 ::http::register https 443 [list ::tls::socket -tls1 1]
 
-set dashircbot_worth_subversion "2.16"
+set dashircbot_worth_subversion "2.17"
 set dashircbot_worth_script [file tail [ dict get [ info frame [ info frame ] ] file ]]
 
 set dashircbot_translation [dict create \
@@ -32,8 +32,8 @@ set dashircbot_translation [dict create \
         "en" "With last 24h supply of %s DASH (source:%s|%s) and a network hashrate of %s (source:%s|%s) your %s would have generated %.9f DASH @ %s DASH/BTC (source:%s|%s) = %.9f BTC/Day / %.2f %s/Day (source:%s|%s)" \
         "fr" "Avec %s générés ces derniéres 24h (source:%s|%s) et un hachage réseau de %s (source:%s|%s) vos %s aurais généré %.9f DASH @ %s DASH/BTC (source:%s|%s) = %.9f BTC/Day / %.2f %s/Day (source:%s|%s)"] \
                                     "result_diff" [dict create \
-        "en" "%s difficulty: %s%s Coin generation: %.2f DASH miner + %.2f DASH masternode (%s%%) = %.2f DASH total" \
-        "fr" "Difficulté %s: %s%s Génération de piéces: %.2f DASH mineur + %.2f DASH masternode (%s%%) = %.2f DASH au total"] \
+        "en" "%s difficulty: %s%s Coin generation: %.2f DASH miner (%s%%) + %.2f DASH masternode (%s%%) + %.2f DASH budgets (%s%%) = %.2f DASH total" \
+        "fr" "Difficulté %s: %s%s Génération de piéces: %.2f DASH mineur (%s%%) + %.2f DASH masternode (%s%%) + %.2f DASH budgets (%s%%) = %.2f DASH au total"] \
                                     "result_diff_asked" [dict create \
         "en" "Asked" \
         "fr" "demandée"] \
@@ -119,6 +119,18 @@ proc dashircbot_refresh_tablevar {} {
   set now [clock seconds]
   if {$now > [expr $::dashircbot_tablevarlast+$::dashircbot_tablevar_refreshinterval]} {
     putlog "dashircbot v$::dashircbot_version ($::dashircbot_worth_script v$::dashircbot_worth_subversion) \[I\] [lindex [info level 0] 0] refreshing tablevar (last from [clock format $::dashircbot_tablevarlast -format {%Y-%m-%d %H:%M:%S} -gmt true])"
+    if { [catch {set httptoken [http::geturl "https://explorer.dashninja.pl/chain/Dash/q/getblockcount" -timeout 2000]} errmsg] } {
+      http::cleanup $httptoken
+      putlog "dashircbot v$::dashircbot_version ($::dashircbot_worth_script v$::dashircbot_worth_subversion) \[E\] [lindex [info level 0] 0] $errmsg"
+    } elseif { [http::status $httptoken] != "ok" } {
+      putlog "dashircbot v$::dashircbot_version ($::dashircbot_worth_script v$::dashircbot_worth_subversion) \[E\] [lindex [info level 0] 0] HTTP Status: [http::status $httptoken]"
+      http::cleanup $httptoken
+    } else {
+      set blockcountraw [http::data $httptoken]
+      http::cleanup $httptoken
+      dict set ::dashircbot_tablevar "blockcount" [list $blockcountraw "[clock seconds]" "dashninja"]
+#      putlog "dashircbot v$::dashircbot_version ($::dashircbot_worth_script v$::dashircbot_worth_subversion) \[I\] [lindex [info level 0] 0] OK (blockcount: $blockcountraw) = $::dashircbot_tablevar]"
+    }
     if { [catch {set httptoken [http::geturl "https://explorer.dashninja.pl/chain/Dash/q/getdifficulty" -timeout 2000]} errmsg] } {
       http::cleanup $httptoken
       putlog "dashircbot v$::dashircbot_version ($::dashircbot_worth_script v$::dashircbot_worth_subversion) \[E\] [lindex [info level 0] 0] $errmsg"
@@ -131,7 +143,7 @@ proc dashircbot_refresh_tablevar {} {
       dict set ::dashircbot_tablevar "difficulty" [list $difficultyraw "[clock seconds]" "dashninja"]
 #      putlog "dashircbot v$::dashircbot_version ($::dashircbot_worth_script v$::dashircbot_worth_subversion) \[I\] [lindex [info level 0] 0] OK (difficulty: $difficultyraw) = $::dashircbot_tablevar]"
     }
-    if { [catch {set httptoken [http::geturl "https://dashninja.pl/api/tablevars" -timeout 2000]} errmsg] } {
+    if { [catch {set httptoken [http::geturl "https://www.dashninja.pl/api/tablevars" -timeout 2000]} errmsg] } {
       http::cleanup $httptoken
       putlog "dashircbot v$::dashircbot_version ($::dashircbot_worth_script v$::dashircbot_worth_subversion) \[E\] [lindex [info level 0] 0] $errmsg"
     } elseif { [http::status $httptoken] != "ok" } {
@@ -223,7 +235,8 @@ proc do_worth {action fiat nick chan param} {
       dashircbot_unavailable $header $lang
       return
     }
-    set mnpaymentratiodisp [expr round(double([lindex $mnpaymentratio 0])*100)]
+    set minerpaymentratiodisp [expr round((1.0-double([lindex $mnpaymentratio 0]))*0.9*100)]
+    set mnpaymentratiodisp [expr round(double([lindex $mnpaymentratio 0])*0.9*100)]
     set mnpayments [dashircbot_tablevar_fetch "mnpayments"]
     if { [lindex $mnpayments 0] == false } {
       dashircbot_unavailable $header $lang
@@ -277,7 +290,12 @@ proc do_worth {action fiat nick chan param} {
     }
     puts 3
     set difficulty [dashircbot_tablevar_fetch "difficulty"]
-    if { [lindex $mcapchange 0] == false } {
+    if { [lindex $difficulty 0] == false } {
+      dashircbot_unavailable $header $lang
+      return
+    }
+    set blockcount [dashircbot_tablevar_fetch "blockcount"]
+    if { [lindex $blockcount 0] == false } {
       dashircbot_unavailable $header $lang
       return
     }
@@ -300,7 +318,7 @@ proc do_worth {action fiat nick chan param} {
         puthelp "$header [dict get [dict get $::dashircbot_translation "usage_calc"] $lang]"
         return
       }
-      set gaindash [expr ($userhashpers/double([lindex $networkhashpers 0]))*(double([lindex $last24hsupply 0])*(1-double([lindex $mnpaymentratio 0])))]
+      set gaindash [expr ($userhashpers/double([lindex $networkhashpers 0]))*(double([lindex $last24hsupply 0])*(1-double([lindex $mnpaymentratio 0]))*0.9)]
       set amountbtc [expr $gaindash*[lindex $btcdrk 0]]
       if {$fiat == "EUR"} {
         set amountfiat [expr $amountbtc*[lindex $eurobtc 0]]
@@ -331,10 +349,13 @@ proc do_worth {action fiat nick chan param} {
       } elseif {$cursupply > 25} {
         set cursupply 25
       }
-      set cursupply [expr $cursupply-($cursupply/14.0)]
-      set cursupplymn [expr $cursupply*double([lindex $mnpaymentratio 0])]
-      set cursupplyminers [expr ($cursupply-$cursupplymn)]
-      set outmsg [format [dict get [dict get $::dashircbot_translation "result_diff"] $lang] $difftext $diffval $diffsource $cursupplyminers $cursupplymn $mnpaymentratiodisp $cursupply]
+      for {set i 210240} {$i < $blockcount} {set i [expr $i+210240]} {
+        set cursupply [expr $cursupply-($cursupply/14.0)]
+      }
+      set cursupplymn [expr $cursupply*double([lindex $mnpaymentratio 0])*0.9]
+      set cursupplyminers [expr $cursupply*(1.0-double([lindex $mnpaymentratio 0]))*0.9]
+      set cursupplybudget [expr $cursupply-$cursupplymn-$cursupplyminers]
+      set outmsg [format [dict get [dict get $::dashircbot_translation "result_diff"] $lang] $difftext $diffval $diffsource $cursupplyminers $minerpaymentratiodisp $cursupplymn $mnpaymentratiodisp $cursupplybudget "10" $cursupply]
     } elseif {$action == "marketcap"} {
       if {$fiat == "EUR"} {
         set mcapfiat $mcapeur
@@ -517,7 +538,7 @@ lappend dashircbot_command_en { {!calceur & !calcusd} {Mining earnings} }
 bind msg - !diff msg:diff
 bind pub - !diff pub:diff
 
-lappend dashircbot_command_fr { {!diff} {Difficult�} }
+lappend dashircbot_command_fr { {!diff} {Difficulté} }
 lappend dashircbot_command_en { {!diff} {Difficulty} }
 
 bind msg - !marketcap msg:marketcapusd
